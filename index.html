@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GSC Keyword Tracker — isshoni.fr</title>
+<script src="https://accounts.google.com/gsi/client" async></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f5; --bg3: #eeeeee;
+    --text: #1a1a1a; --text2: #666; --text3: #999;
+    --border: rgba(0,0,0,0.1); --border2: rgba(0,0,0,0.18);
+    --radius: 8px; --radius-lg: 12px;
+    --green-bg: #EAF3DE; --green-text: #3B6D11;
+    --blue-bg: #E6F1FB; --blue-text: #185FA5;
+    --amber-bg: #FAEEDA; --amber-text: #854F0B;
+    --red-bg: #FCEBEB; --red-text: #A32D2D;
+  }
+  @media(prefers-color-scheme:dark){
+    :root{
+      --bg:#1e1e1e;--bg2:#2a2a2a;--bg3:#333;
+      --text:#f0f0f0;--text2:#aaa;--text3:#666;
+      --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.18);
+      --green-bg:#27500A;--green-text:#C0DD97;
+      --blue-bg:#0C447C;--blue-text:#B5D4F4;
+      --amber-bg:#633806;--amber-text:#FAC775;
+      --red-bg:#791F1F;--red-text:#F7C1C1;
+    }
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 12px; }
+  .topbar h1 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .site-badge { font-size: 12px; padding: 3px 10px; border-radius: 20px; background: var(--bg2); border: 1px solid var(--border); color: var(--text2); font-weight: 400; }
+  .topbar-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .btn { cursor: pointer; padding: 7px 14px; border-radius: var(--radius); font-size: 13px; font-weight: 500; border: 1px solid var(--border2); background: var(--bg); color: var(--text); display: inline-flex; align-items: center; gap: 6px; transition: background .15s; }
+  .btn:hover { background: var(--bg2); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-google { background: #fff; border: 1px solid #dadce0; color: #3c4043; }
+  .btn-google:hover { background: #f8f9fa; }
+  select { padding: 7px 10px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg); color: var(--text); font-size: 13px; cursor: pointer; }
+  input[type=text] { padding: 7px 12px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg); color: var(--text); font-size: 13px; outline: none; }
+  input[type=text]:focus { border-color: #185FA5; box-shadow: 0 0 0 2px rgba(24,95,165,.15); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .stat { background: var(--bg2); border-radius: var(--radius); padding: 14px 16px; }
+  .stat-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+  .stat-value { font-size: 24px; font-weight: 600; }
+  .controls { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .controls input { flex: 1; min-width: 180px; }
+  .tbl-wrap { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  thead { background: var(--bg2); }
+  th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text2); border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; white-space: nowrap; text-transform: uppercase; letter-spacing: .04em; }
+  th:hover { color: var(--text); }
+  td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--border); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg2); }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .b-green { background: var(--green-bg); color: var(--green-text); }
+  .b-blue { background: var(--blue-bg); color: var(--blue-text); }
+  .b-amber { background: var(--amber-bg); color: var(--amber-text); }
+  .b-red { background: var(--red-bg); color: var(--red-text); }
+  .login-box { text-align: center; padding: 4rem 2rem; border: 1px solid var(--border); border-radius: var(--radius-lg); max-width: 420px; margin: 3rem auto; }
+  .login-box h2 { font-size: 18px; margin-bottom: .5rem; }
+  .login-box p { color: var(--text2); font-size: 13px; line-height: 1.6; margin-bottom: 1.5rem; }
+  .pager { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text2); }
+  .pager-btns { display: flex; gap: 6px; }
+  .loading { text-align: center; padding: 3rem; color: var(--text2); font-size: 15px; }
+  .err { background: var(--red-bg); color: var(--red-text); border-radius: var(--radius); padding: 10px 16px; font-size: 13px; margin-bottom: 1rem; }
+  .g-logo { width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <h1>
+      <svg width="22" height="22" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      GSC Tracker <span class="site-badge">isshoni.fr</span>
+    </h1>
+    <div class="topbar-right">
+      <select id="dateRange" onchange="if(gscToken)loadData()">
+        <option value="28">28 derniers jours</option>
+        <option value="90" selected>3 derniers mois</option>
+        <option value="180">6 derniers mois</option>
+        <option value="365">12 derniers mois</option>
+      </select>
+      <button class="btn" id="refreshBtn" onclick="loadData()" style="display:none">↻ Actualiser</button>
+      <button class="btn" id="exportBtn" onclick="exportCSV()" style="display:none">↓ CSV</button>
+      <button class="btn" id="logoutBtn" onclick="logout()" style="display:none">Déconnecter</button>
+    </div>
+  </div>
+
+  <div id="errBox" style="display:none" class="err"></div>
+  <div id="main"></div>
+</div>
+
+<script>
+const CLIENT_ID = '344906324858-ishqeq6942je2v4qh6v4cfarpifoavqn.apps.googleusercontent.com';
+const SITE = 'sc-domain:isshoni.fr';
+let gscToken = null, allRows = [], sortCol = 'impressions', sortDir = -1, page = 0;
+const PER = 25;
+
+function showErr(m) { const b = document.getElementById('errBox'); b.textContent = m; b.style.display = 'block'; }
+function clearErr() { document.getElementById('errBox').style.display = 'none'; }
+
+function renderLogin() {
+  document.getElementById('main').innerHTML = `
+    <div class="login-box">
+      <svg width="48" height="48" viewBox="0 0 24 24" style="margin-bottom:16px"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      <h2>Connexion requise</h2>
+      <p>Connecte ton compte Google pour accéder aux données de <strong>isshoni.fr</strong> depuis Search Console.</p>
+      <button class="btn btn-google" onclick="signIn()">
+        <svg class="g-logo" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Se connecter avec Google
+      </button>
+    </div>`;
+}
+
+function signIn() {
+  clearErr();
+  if (typeof google === 'undefined') {
+    showErr("Bibliothèque Google non chargée. Vérifie ta connexion et recharge la page.");
+    return;
+  }
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/webmasters.readonly',
+    callback: (resp) => {
+      if (resp.error) { showErr('Erreur auth : ' + resp.error); return; }
+      gscToken = resp.access_token;
+      ['refreshBtn','exportBtn','logoutBtn'].forEach(id => document.getElementById(id).style.display = '');
+      loadData();
+    }
+  });
+  client.requestAccessToken({ prompt: 'select_account' });
+}
+
+function logout() {
+  gscToken = null; allRows = [];
+  ['refreshBtn','exportBtn','logoutBtn'].forEach(id => document.getElementById(id).style.display = 'none');
+  renderLogin();
+}
+
+function getDates() {
+  const days = parseInt(document.getElementById('dateRange').value);
+  const end = new Date(); end.setDate(end.getDate() - 3);
+  const start = new Date(end); start.setDate(start.getDate() - days);
+  return { startDate: start.toISOString().slice(0,10), endDate: end.toISOString().slice(0,10) };
+}
+
+async function loadData() {
+  clearErr();
+  document.getElementById('main').innerHTML = '<div class="loading">⏳ Chargement depuis Google Search Console…</div>';
+  const { startDate, endDate } = getDates();
+  try {
+    const res = await fetch(
+      `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(SITE)}/searchAnalytics/query`,
+      { method: 'POST', headers: { 'Authorization': 'Bearer ' + gscToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ startDate, endDate, dimensions: ['query'], rowLimit: 1000, dataState: 'all' }) }
+    );
+    if (!res.ok) {
+      const e = await res.json();
+      if (res.status === 401) { logout(); showErr('Session expirée, reconnecte-toi.'); return; }
+      if (res.status === 403) { showErr('Accès refusé. Vérifie que ton compte a accès à isshoni.fr dans Search Console.'); renderLogin(); return; }
+      throw new Error(e.error?.message || 'Erreur API');
+    }
+    const data = await res.json();
+    allRows = (data.rows || []).map(r => ({ keyword: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position }));
+    page = 0;
+    renderDashboard();
+  } catch(e) { showErr('Erreur : ' + e.message); renderLogin(); }
+}
+
+function renderDashboard() {
+  const tc = allRows.reduce((s,r) => s+r.clicks, 0);
+  const ti = allRows.reduce((s,r) => s+r.impressions, 0);
+  const ap = allRows.length ? allRows.reduce((s,r) => s+r.position, 0) / allRows.length : 0;
+  const ac = allRows.length ? allRows.reduce((s,r) => s+r.ctr, 0) / allRows.length * 100 : 0;
+  const t10 = allRows.filter(r => r.position <= 10).length;
+  const qw = allRows.filter(r => r.position > 10 && r.position <= 20 && r.impressions > 100).length;
+
+  document.getElementById('main').innerHTML = `
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Mots-clés</div><div class="stat-value">${allRows.length.toLocaleString('fr-FR')}</div></div>
+      <div class="stat"><div class="stat-label">Clics total</div><div class="stat-value">${tc.toLocaleString('fr-FR')}</div></div>
+      <div class="stat"><div class="stat-label">Impressions</div><div class="stat-value">${ti.toLocaleString('fr-FR')}</div></div>
+      <div class="stat"><div class="stat-label">Position moy.</div><div class="stat-value">${ap.toFixed(1)}</div></div>
+      <div class="stat"><div class="stat-label">CTR moyen</div><div class="stat-value">${ac.toFixed(1)}%</div></div>
+      <div class="stat"><div class="stat-label">Top 10</div><div class="stat-value">${t10}</div></div>
+      <div class="stat"><div class="stat-label">Quick wins</div><div class="stat-value">${qw}</div></div>
+    </div>
+    <div class="controls">
+      <input type="text" id="skw" placeholder="Filtrer les mots-clés…" oninput="page=0;renderTable()">
+      <select id="fpos" onchange="page=0;renderTable()">
+        <option value="">Toutes positions</option>
+        <option value="3">Top 3</option>
+        <option value="10">Top 10</option>
+        <option value="30">Top 30</option>
+        <option value="out">Au-delà de 30</option>
+      </select>
+      <select id="fimpr" onchange="page=0;renderTable()">
+        <option value="0">Toutes impressions</option>
+        <option value="100">100+ impressions</option>
+        <option value="500">500+</option>
+        <option value="1000">1 000+</option>
+      </select>
+      <select id="fopp" onchange="page=0;renderTable()">
+        <option value="">Toutes opportunités</option>
+        <option value="quickwin">Quick wins</option>
+        <option value="travailler">À travailler</option>
+        <option value="top3">Top 3</option>
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:36%" onclick="doSort('keyword')">Mot-clé ${arrow('keyword')}</th>
+          <th style="width:13%;text-align:right" onclick="doSort('impressions')">Impressions ${arrow('impressions')}</th>
+          <th style="width:9%;text-align:right" onclick="doSort('clicks')">Clics ${arrow('clicks')}</th>
+          <th style="width:9%;text-align:right" onclick="doSort('ctr')">CTR ${arrow('ctr')}</th>
+          <th style="width:12%;text-align:right" onclick="doSort('position')">Position ${arrow('position')}</th>
+          <th style="width:21%;text-align:center">Opportunité</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="pager" id="pager"></div>
+    </div>`;
+  renderTable();
+}
+
+function arrow(col) { return `<span style="opacity:${sortCol===col?1:.4}">${sortDir===1&&sortCol===col?'↑':'↓'}</span>`; }
+
+function oppLabel(r) {
+  if (r.position <= 3) return { label: 'Top 3 ✓', cls: 'b-green', key: 'top3' };
+  if (r.position <= 10 && r.impressions > 200) return { label: 'Consolider', cls: 'b-blue', key: 'consolider' };
+  if (r.position > 10 && r.position <= 20 && r.impressions > 100) return { label: 'Quick win', cls: 'b-amber', key: 'quickwin' };
+  if (r.position > 20 && r.impressions > 500) return { label: 'À travailler', cls: 'b-red', key: 'travailler' };
+  return null;
+}
+
+function getFiltered() {
+  const s = (document.getElementById('skw')?.value || '').toLowerCase();
+  const fp = document.getElementById('fpos')?.value || '';
+  const fm = parseInt(document.getElementById('fimpr')?.value || '0');
+  const fo = document.getElementById('fopp')?.value || '';
+  return allRows.filter(r => {
+    if (s && !r.keyword.toLowerCase().includes(s)) return false;
+    if (fp === '3' && r.position > 3) return false;
+    if (fp === '10' && r.position > 10) return false;
+    if (fp === '30' && r.position > 30) return false;
+    if (fp === 'out' && r.position <= 30) return false;
+    if (fm && r.impressions < fm) return false;
+    if (fo) { const o = oppLabel(r); if (!o || o.key !== fo) return false; }
+    return true;
+  }).sort((a, b) => {
+    const va = a[sortCol], vb = b[sortCol];
+    return typeof va === 'string' ? va.localeCompare(vb) * sortDir : (va - vb) * sortDir;
+  });
+}
+
+function renderTable() {
+  const data = getFiltered();
+  const s = page * PER, slice = data.slice(s, s + PER);
+  const tbody = document.getElementById('tbody');
+  if (!tbody) return;
+  tbody.innerHTML = slice.length
+    ? slice.map(r => {
+        const o = oppLabel(r);
+        return `<tr>
+          <td title="${r.keyword}">${r.keyword}</td>
+          <td style="text-align:right">${r.impressions.toLocaleString('fr-FR')}</td>
+          <td style="text-align:right">${r.clicks.toLocaleString('fr-FR')}</td>
+          <td style="text-align:right">${(r.ctr * 100).toFixed(1)}%</td>
+          <td style="text-align:right">${r.position.toFixed(1)}</td>
+          <td style="text-align:center">${o ? `<span class="badge ${o.cls}">${o.label}</span>` : '<span style="color:var(--text3)">–</span>'}</td>
+        </tr>`;
+      }).join('')
+    : '<tr><td colspan="6" style="text-align:center;padding:2.5rem;color:var(--text2)">Aucun résultat pour ce filtre.</td></tr>';
+  const pager = document.getElementById('pager');
+  if (pager) {
+    const pages = Math.ceil(data.length / PER);
+    pager.innerHTML = `
+      <span>${s + 1}–${Math.min(s + PER, data.length)} sur ${data.length.toLocaleString('fr-FR')} mots-clés</span>
+      <div class="pager-btns">
+        <button class="btn" onclick="chPage(-1)" ${page === 0 ? 'disabled' : ''}>← Préc.</button>
+        <button class="btn" onclick="chPage(1)" ${page >= pages - 1 ? 'disabled' : ''}>Suiv. →</button>
+      </div>`;
+  }
+}
+
+function doSort(col) { if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = -1; } page = 0; if (allRows.length) renderDashboard(); }
+function chPage(d) { page += d; renderTable(); }
+
+function exportCSV() {
+  const h = 'Mot-clé,Impressions,Clics,CTR,Position,Opportunité\n';
+  const rows = allRows.map(r => { const o = oppLabel(r); return `"${r.keyword}",${r.impressions},${r.clicks},${(r.ctr*100).toFixed(2)}%,${r.position.toFixed(1)},"${o?o.label:''}"`; }).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([h + rows], { type: 'text/csv;charset=utf-8;' }));
+  a.download = 'isshoni-gsc-keywords.csv'; a.click();
+}
+
+renderLogin();
+</script>
+</body>
+</html>
