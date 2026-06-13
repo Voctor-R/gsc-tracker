@@ -162,12 +162,7 @@ async function loadData() {
     if (!res.ok) {
       const e = await res.json();
       if (res.status === 401) { logout(); showErr('Session expirée, reconnecte-toi.'); return; }
-      if (res.status === 403) { 
-       const details = await res.json();
-       showErr('403 : ' + JSON.stringify(details)); 
-       renderLogin(); 
-       return; 
-     }
+      if (res.status === 403) { showErr('Accès refusé. Vérifie que ton compte a accès à isshoni.fr dans Search Console.'); renderLogin(); return; }
       throw new Error(e.error?.message || 'Erreur API');
     }
     const data = await res.json();
